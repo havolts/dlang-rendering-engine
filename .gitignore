@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/macoswindowing2
+macoswindowing2.so
+macoswindowing2.dylib
+macoswindowing2.dll
+macoswindowing2.a
+macoswindowing2.lib
+macoswindowing2-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
