@@ -1,9 +1,12 @@
 {
-	"authors": [
-		"Hudhayfa"
-	],
-	"copyright": "Copyright © 2025, Hudhayfa",
-	"description": "A minimal D application.",
-	"license": "proprietary",
-	"name": "macoswindowing2"
+  "authors": ["Hudhayfa"],
+  "copyright": "Copyright © 2025, Hudhayfa",
+  "description": "A minimal D application.",
+  "license": "proprietary",
+  "name": "macoswindowing2",
+  "libs": ["WindowModule"],
+  "lflags": ["-L$PACKAGE_DIR/libs/"],
+  "preBuildCommands": [
+    "clang -framework Cocoa -shared -o libs/libWindowModule.dylib source/objc/window.m"
+  ]
 }
