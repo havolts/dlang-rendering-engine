@@ -3,7 +3,7 @@
   "copyright": "Copyright © 2025, Hudhayfa",
   "description": "A minimal D application.",
   "license": "proprietary",
-  "name": "macoswindowing2",
+  "name": "macoswindowing",
   "libs": ["WindowModule"],
   "lflags": ["-L$PACKAGE_DIR/libs/"],
   "preBuildCommands": [

@@ -109,7 +109,7 @@ void setupContentView(NSWindow *window) {
     NSRect frame = [window contentRectForFrameRect:[window frame]];
     ContentView *contentView = [[ContentView alloc] initWithFrame:frame];
     [window setContentView:contentView];
-    NSLog(@"[INFO] ContentView created and set as window's content view");
+    //NSLog(@"[INFO] ContentView created and set as window's content view");
 }
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
@@ -154,11 +154,12 @@ ContentView* GetContentView(NSWindow *window) {
 void DrawPixelC(NSWindow *window, int x, int y, float r, float g, float b, float a) {
     ContentView* view = GetContentView(window);
     if (view) {
-        int red = (int)(r * 255);
-        int green = (int)(g * 255);
-        int blue = (int)(b * 255);
-        int alpha = (int)(a * 255);
+        int red = (int)(r);
+        int green = (int)(g);
+        int blue = (int)(b);
+        int alpha = (int)(a);
         [view setPixelAtX:x Y:y red:red green:green blue:blue alpha:alpha];
+        //NSLog(@"[INFO] Pixel drawn at (%d, %d) with color (%d, %d, %d, %d)", x, y, red, green, blue, alpha);
     }
 }
 
