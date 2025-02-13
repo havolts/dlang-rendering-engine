@@ -19,7 +19,7 @@ void main()
         {
             for (int j = 0; j < 1000; j++)
             {
-                Colour random = new Colour(i, j, i * j, 255 - (i));
+                Colour random = new Colour(i, j, i * j, 255);
                 window.drawPixel(i, j, random);
                 //writeln("Pixel drawn at (", i, ", ", j, ")");
             }
