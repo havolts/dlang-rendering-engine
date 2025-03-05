@@ -1,12 +1,12 @@
 {
   "authors": ["Hudhayfa"],
   "copyright": "Copyright © 2025, Hudhayfa",
-  "description": "A minimal D application.",
+  "description": "Hardware renderer",
   "license": "proprietary",
-  "name": "macoswindowing",
-  "libs": ["WindowModule"],
-  "lflags": ["-L$PACKAGE_DIR/libs/"],
-  "preBuildCommands": [
-    "clang -framework Cocoa -shared -o libs/libWindowModule.dylib source/objc/window.m"
-  ]
+  "name": "renderengine",
+  "dependencies": {
+    "macoswindowing": {
+      "path": "/Users/hudhayfa/Development/D/Projects/macoswindowing/"
+    }
+  }
 }
