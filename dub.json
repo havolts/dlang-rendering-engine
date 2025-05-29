@@ -1,12 +1,16 @@
 {
   "authors": ["Hudhayfa"],
   "copyright": "Copyright © 2025, Hudhayfa",
-  "description": "Hardware renderer",
-  "license": "proprietary",
-  "name": "renderengine",
   "dependencies": {
     "macoswindowing": {
       "path": "/Users/hudhayfa/Development/D/Projects/macoswindowing/"
+    },
+    "metalrendering": {
+      "path": "/Users/hudhayfa/Development/D/Projects/metalrendering/"
     }
-  }
+  },
+  "description": "Hardware renderer",
+  "license": "proprietary",
+  "name": "renderengine",
+  "preBuildCommands": []
 }
