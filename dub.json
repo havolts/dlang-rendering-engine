@@ -12,5 +12,11 @@
   "description": "Hardware renderer",
   "license": "proprietary",
   "name": "renderengine",
-  "preBuildCommands": []
+  "preBuildCommands": [
+      "xcrun -sdk macosx metal -c source/triangle.metal -o triangle.air",
+      "xcrun -sdk macosx metallib triangle.air -o default.metallib"
+  ],
+  "copyFiles": [
+      "default.metallib"
+  ]
 }
