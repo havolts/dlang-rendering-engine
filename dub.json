@@ -1,12 +1,14 @@
 {
-  "authors": ["Hudhayfa"],
-  "copyright": "Copyright © 2025, Hudhayfa",
+  "authors": ["havolts"],
+  "copyright": "Copyright © 2025, havolts",
   "dependencies": {
     "macoswindowing": {
-      "path": "/Users/hudhayfa/Development/D/Projects/macoswindowing/"
+      "repository": "git+https://github.com/havolts/macoswindowing-dlang.git",
+      "version": "~main"
     },
     "metalrendering": {
-      "path": "/Users/hudhayfa/Development/D/Projects/metalrendering/"
+      "repository": "git+https://github.com/havolts/dlang-metal-bindings.git",
+      "version": "~main"
     }
   },
   "description": "Hardware renderer",
