@@ -1,13 +1,38 @@
 #include <metal_stdlib>
 using namespace metal;
 
-vertex float4 vertexShader(uint vertexID [[vertex_id]], constant packed_float3* vertexPositions)
+struct VertexData {
+    packed_float4 position;
+    packed_float4 color;
+};
+
+struct VertexOut {
+    float4 position [[position]];
+    float2 textureCoordinate;
+    float4 color;
+};
+
+struct TransformationData {
+    float4x4 modelMatrix;
+    float4x4 viewMatrix;
+    float4x4 perspectiveMatrix;
+};
+
+
+
+
+vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
+             constant VertexData* vertexData,
+             constant TransformationData* transformationData)
 {
-    float4 vertexOutPositions = float4(vertexPositions[vertexID][0],vertexPositions[vertexID][1],vertexPositions[vertexID][2],1.0f);
-    return vertexOutPositions;
+    VertexOut out;
+    out.position = transformationData->perspectiveMatrix * transformationData->viewMatrix * transformationData->modelMatrix * float4(vertexData[vertexID].position);
+    out.color = float4(vertexData[vertexID].color);
+    return out;
 }
 
-fragment float4 fragmentShader(float4 vertexOutPositions [[stage_in]])
+
+fragment float4 fragmentShader(VertexOut input [[stage_in]])
 {
-    return float4(182.0f/255.0f, 240.0f/255.0f, 228.0f/255.0f, 1.0f);
+    return input.color;
 }

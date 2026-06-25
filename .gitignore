@@ -15,3 +15,5 @@ macoswindowing2-test-*
 *.obj
 *.lst
 renderengine
+default.metallib
+triangle.air
