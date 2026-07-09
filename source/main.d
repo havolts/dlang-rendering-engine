@@ -1,6 +1,8 @@
 // renderengine/source/main.d
+module main;
 import macoswindowing.window;
 import metalrendering;
+import mesh;
 import std.stdio;
 import std.file;
 import std.random;
@@ -22,26 +24,11 @@ MTLDrawable drawable;
 __gshared MTLRenderPipelineState metalRenderPSO;
 shared bool running = true;
 
-__gshared MTLBuffer cubeVertexBuffer;
-__gshared MTLBuffer transformationBuffer;
-
 __gshared MTLTexture depthTexture;
 __gshared MTLDepthStencilState depthStencilState;
 
-float angleInDegrees = 45;
-
-struct VertexData
-{
-    float4 position;
-    float4 color;
-}
-
-struct TransformationData
-{
-    float4x4 modelMatrix;
-    float4x4 viewMatrix;
-    float4x4 perspectiveMatrix;
-}
+__gshared Mesh triangle;
+__gshared Mesh cube;
 
 float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, float nearZ, float farZ)
 {
@@ -55,150 +42,65 @@ float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, float ne
     return matrix;
 }
 
-void encodeRenderCommand(MTLRenderCommandEncoder renderCommandEncoder)
+void createTriangleMesh()
 {
-    float4x4 translationMatrix = float4x4([[1f,0,0,0],
-                                           [0,1f,0,0],
-                                           [0,0,1f,-1f],
-                                           [0,0,0,1f]]);
-
-    angleInDegrees++;
-    float angleInRadians = angleInDegrees * PI /180.0f;
-
-    float4x4 rotationMatrix = float4x4([[cos(angleInRadians),0,sin(angleInRadians),0],
-                                        [0,1f,0,0],
-                                        [-sin(angleInRadians),0,cos(angleInRadians),0],
-                                        [0,0,0,1f]]) * float4x4([[1f,0,0,0],
-                                                                 [0,cos(angleInRadians),sin(angleInRadians),0],
-                                                                 [0,-sin(angleInRadians),cos(angleInRadians),0],
-                                                                 [0,0,0,1f]]) * float4x4([[cos(angleInRadians),-sin(angleInRadians),0,0],
-                                                                                          [sin(angleInRadians),cos(angleInRadians),0,0],
-                                                                                          [0,0,1f,0],
-                                                                                          [0,0,0,1f]]);
-
-    float4x4 modelMatrix = translationMatrix * rotationMatrix;
-
-    float3 R = float3(1f,0,0);
-    float3 U = float3(0,1f,0);
-    float3 F = float3(0,0,-1f);
-    float3 P = float3(0,0,3f);
-
-    float4x4 viewMatrix = float4x4([[R.x, R.y, R.z, dot(-R, P)],
-                                    [U.x, U.y, U.z, dot(-U, P)],
-                                    [-F.x, -F.y, -F.z, dot(F, P)],
-                                    [0f , 0f , 0f , 1f]]);
-
-    float aspectRatio = win.width/win.height;
-    float fov = 90 * (PI / 180f);
-    float nearZ = 0.1f;
-    float farZ = 100.0f;
-
-    float4x4 perspectiveMatrix = matrix_perspective_right_hand(fov, aspectRatio, nearZ, farZ);
-    modelMatrix.rowToColumnMajor();
-    viewMatrix.rowToColumnMajor();
-    perspectiveMatrix.rowToColumnMajor();
-    TransformationData transformationData = {modelMatrix, viewMatrix, perspectiveMatrix};
-
-    auto contentsPtr = transformationBuffer.contents();
-    *(cast(TransformationData*) contentsPtr) = transformationData;
-
-    renderCommandEncoder.setFrontFacingWinding(MTLWinding.MTLWindingCounterClockwise);
-    renderCommandEncoder.setCullMode(MTLCullMode.MTLCullModeBack);
-    renderCommandEncoder.setRenderPipelineState(metalRenderPSO);
-    renderCommandEncoder.setDepthStencilState(depthStencilState);
-    renderCommandEncoder.setVertexBuffer(cubeVertexBuffer, 0, 0);
-    renderCommandEncoder.setVertexBuffer(transformationBuffer, 0, 1);
-    MTLPrimitiveType typeTriangle = MTLPrimitiveType.triangle;
-    NSUInteger vertexStart = 0;
-    NSUInteger vertexCount = 36;
-    renderCommandEncoder.drawPrimitives(typeTriangle, vertexStart, vertexCount);
-}
-
-void createCube()
-{
-VertexData[] cubeVertices =
-    [
-        // Front face (RED)
-        {{-0.5, -0.5, 0.5, 1.0}, {1.0, 0.2, 0.2, 1.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {1.0, 0.2, 0.2, 1.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {1.0, 0.2, 0.2, 1.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {1.0, 0.2, 0.2, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {1.0, 0.2, 0.2, 1.0}},
-        {{-0.5, -0.5, 0.5, 1.0}, {1.0, 0.2, 0.2, 1.0}},
-
-        // Back face (BLUE)
-        {{0.5, -0.5, -0.5, 1.0}, {0.2, 0.2, 1.0, 1.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {0.2, 0.2, 1.0, 1.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {0.2, 0.2, 1.0, 1.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {0.2, 0.2, 1.0, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {0.2, 0.2, 1.0, 1.0}},
-        {{0.5, -0.5, -0.5, 1.0}, {0.2, 0.2, 1.0, 1.0}},
-
-        // Top face (GREEN)
-        {{-0.5, 0.5, 0.5, 1.0}, {0.2, 1.0, 0.2, 1.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {0.2, 1.0, 0.2, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {0.2, 1.0, 0.2, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {0.2, 1.0, 0.2, 1.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {0.2, 1.0, 0.2, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {0.2, 1.0, 0.2, 1.0}},
-
-        // Bottom face (YELLOW)
-        {{-0.5, -0.5, -0.5, 1.0}, {1.0, 1.0, 0.2, 1.0}},
-        {{0.5, -0.5, -0.5, 1.0}, {1.0, 1.0, 0.2, 1.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {1.0, 1.0, 0.2, 1.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {1.0, 1.0, 0.2, 1.0}},
-        {{-0.5, -0.5, 0.5, 1.0}, {1.0, 1.0, 0.2, 1.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {1.0, 1.0, 0.2, 1.0}},
-
-        // Left face (MAGENTA/PURPLE)
-        {{-0.5, -0.5, -0.5, 1.0}, {1.0, 0.2, 1.0, 1.0}},
-        {{-0.5, -0.5, 0.5, 1.0}, {1.0, 0.2, 1.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {1.0, 0.2, 1.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {1.0, 0.2, 1.0, 1.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {1.0, 0.2, 1.0, 1.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {1.0, 0.2, 1.0, 1.0}},
-
-        // Right face (CYAN)
-        {{0.5, -0.5, 0.5, 1.0}, {0.2, 1.0, 1.0, 1.0}},
-        {{0.5, -0.5, -0.5, 1.0}, {0.2, 1.0, 1.0, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {0.2, 1.0, 1.0, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {0.2, 1.0, 1.0, 1.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {0.2, 1.0, 1.0, 1.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {0.2, 1.0, 1.0, 1.0}},
-    ];
-
-    cubeVertexBuffer = device.makeBuffer(cubeVertices.ptr, cubeVertices.length * VertexData.sizeof, MTLResourceOptions.storageModeShared);
-    transformationBuffer = device.makeBuffer(TransformationData.sizeof, MTLResourceOptions.storageModeShared);
-}
-
-void createTriangle()
-{
-    static immutable float[42] triangleVertices =
+    VertexData[] triangleVertices =
     [
         // Triangle 1 (red)
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-         0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-         0.0f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-
-        // Triangle 2 (blue)
-         0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-         0.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        {{-0.5f, -0.5f, 0.0f, 0.5f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+        {{0.0f, -0.5f, 0.0f, 0.5f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+        {{0.0f,  0.5f, 0.0f, 0.5f}, {1.0f, 0.0f, 0.0f, 1.0f}},
     ];
-    //triangleVertexBuffer = device.makeBuffer(
-        //triangleVertices.ptr,
-        //triangleVertices.length * float.sizeof,
-        //MTLResourceOptions.storageModeShared
-    //);
+    uint[] triangleIndices =
+    [
+        // Triangle 1 (red)
+        0,1,2
+    ];
+    triangle = new Mesh(triangleVertices, triangleIndices, triangleIndices.length, win, &metalRenderPSO, &depthStencilState);
+    triangle.makeBuffer(device);
 }
 
-void createDefaultLibrary()
+void createCubeMesh()
 {
-    metalDefaultLibrary = device.makeDefaultLibrary();
-    if(metalDefaultLibrary is null)
-    {
-        writeln("Failed to load default library.");
-    }
+    VertexData[] cubeVertices =
+    [
+        // Front-bottom-left  (0)
+        {{-0.5f, -0.5f,  0.5f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+        // Front-bottom-right (1)
+        {{ 0.5f, -0.5f,  0.5f, 1.0f}, {0.5f, 0.5f, 0.0f, 1.0f}},
+        // Front-top-right    (2)
+        {{ 0.5f,  0.5f,  0.5f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
+        // Front-top-left     (3)
+        {{-0.5f,  0.5f,  0.5f, 1.0f}, {0.0f, 0.5f, 0.5f, 1.0f}},
+
+        // Back-bottom-left   (4)
+        {{-0.5f, -0.5f, -0.5f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},
+        // Back-bottom-right  (5)
+        {{ 0.5f, -0.5f, -0.5f, 1.0f}, {0.5f, 0.0f, 0.5f, 1.0f}},
+        // Back-top-right     (6)
+        {{ 0.5f,  0.5f, -0.5f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+        // Back-top-left      (7)
+        {{-0.5f,  0.5f, -0.5f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
+    ];
+
+    uint[] cubeIndices =
+    [
+        // Front face
+        0, 1, 2,  2, 3, 0,
+        // Back face
+        5, 4, 7,  7, 6, 5,
+        // Left face
+        4, 0, 3,  3, 7, 4,
+        // Right face
+        1, 5, 6,  6, 2, 1,
+        // Top face
+        3, 2, 6,  6, 7, 3,
+        // Bottom face
+        4, 5, 1,  1, 0, 4,
+    ];
+
+    cube = new Mesh(cubeVertices, cubeIndices, cubeIndices.length, win, &metalRenderPSO, &depthStencilState);
+    cube.makeBuffer(device);
 }
 
 void createRenderPipeline()
@@ -232,28 +134,57 @@ void createRenderPipeline()
 
 void renderThread()
 {
-    float fpsLimit = 120;
-    int fpsLimitInt = cast(int)round((1000/fpsLimit));
+    writeln("Passed renderThread Start.");
     void* lastDrawablePtr = null;
+
+    MonoTime lastFrameTime = MonoTime.currTime;
+    long fpsLimit = 60L; // Changed to 60 for testing
+    long targetFrameTime = 1_000_000L / fpsLimit; // microseconds per frame
 
     while (atomicLoad(running))
     {
+        MonoTime frameStart = MonoTime.currTime;
+
+        // Calculate delta time
+        Duration frameTime = frameStart - lastFrameTime;
+        lastFrameTime = frameStart;
+        float delta = frameTime.total!"usecs" / 1_000_000f;
+
+        // Optional: print FPS (comment out for performance)
+        // writeln(1f/delta);
+
+        cube.rotation.x += 1f * delta;
+
         auto pool = NSAutoreleasePool.alloc().init();
         scope(exit) pool.drain();
-        Thread.sleep(fpsLimitInt.msecs);
 
         auto commandBuffer = commandQueue.makeCommandBuffer();
-        if (commandBuffer is null) continue;
+        if (commandBuffer is null)
+        {
+            writeln("Failed commandBuffer check.");
+            continue;
+        }
 
         drawable = view.currentDrawable;
-        if (drawable is null) continue;
+        if (drawable is null)
+        {
+            writeln("Failed drawable check.");
+            continue;
+        }
 
         auto currentPtr = cast(void*) drawable;
-        if (currentPtr == lastDrawablePtr) continue;
+        if (currentPtr == lastDrawablePtr)
+        {
+            continue;
+        }
         lastDrawablePtr = currentPtr;
 
         auto renderPassDescriptor = view.currentRenderPassDescriptor;
-        if (renderPassDescriptor is null) continue;
+        if (renderPassDescriptor is null)
+        {
+            writeln("Failed renderPassDescriptor check.");
+            continue;
+        }
 
         auto cd = renderPassDescriptor.colorAttachments[0];
         cd.texture = drawable.texture;
@@ -266,38 +197,95 @@ void renderThread()
         depthAttachment.storeAction = MTLStoreAction.dontCare;
 
         auto renderEncoder = commandBuffer.makeRenderCommandEncoder(renderPassDescriptor);
-        if (renderEncoder is null) continue;
+        if (renderEncoder is null)
+        {
+            writeln("Failed renderEncoder check.");
+            continue;
+        }
+        renderEncoder.setFrontFacingWinding(MTLWinding.MTLWindingCounterClockwise);
+        renderEncoder.setCullMode(MTLCullMode.MTLCullModeNone);
+        renderEncoder.setRenderPipelineState(metalRenderPSO);
+        renderEncoder.setDepthStencilState(depthStencilState);
 
-        size_t vertexStart = 0;
-        size_t vertexCount = 6;
+        if(cube is null)
+        {
+            writeln("Failed cube check.");
+        }
 
-        encodeRenderCommand(renderEncoder);
+        float3 R = float3(1f,0,0);
+        float3 U = float3(0,1f,0);
+        float3 F = float3(0,0,-1f);
+        float3 P = float3(0,0,3f);
+
+        float4x4 viewMatrix = float4x4([[R.x, R.y, R.z, dot(-R, P)],
+                                        [U.x, U.y, U.z, dot(-U, P)],
+                                        [-F.x, -F.y, -F.z, dot(F, P)],
+                                        [0f , 0f , 0f , 1f]]);
+
+        float aspectRatio = win.width/win.height;
+        float fov = 90 * (PI / 180f);
+        float nearZ = 0.1f;
+        float farZ = 100.0f;
+
+        float4x4 perspectiveMatrix = matrix_perspective_right_hand(fov, aspectRatio, nearZ, farZ);
+
+        viewMatrix.rowToColumnMajor();
+        perspectiveMatrix.rowToColumnMajor();
+
+        triangle.encodeRenderCommand(renderEncoder, viewMatrix, perspectiveMatrix);
+        cube.encodeRenderCommand(renderEncoder, viewMatrix, perspectiveMatrix);
 
         renderEncoder.endEncoding();
         commandBuffer.present(drawable);
         commandBuffer.commit();
+
+        // Frame limiting with proper handling
+        MonoTime frameEnd = MonoTime.currTime;
+        long elapsed = (frameEnd - frameStart).total!"usecs";
+        long sleepTime = targetFrameTime - elapsed;
+
+        if (sleepTime > 0)
+        {
+            Thread.sleep(sleepTime.usecs);
+        }
+        else if (sleepTime < 0)
+        {
+            // Optionally warn about frame drops
+            //writeln("Frame took too long: ", elapsed, "us (target: ", targetFrameTime, "us)");
+        }
+
+        // Optionally yield to other threads even when not sleeping
+        if (sleepTime <= 0)
+        {
+            Thread.yield();
+        }
     }
 }
 
 void main()
 {
-    frame = CGRect(CGPoint(0,0), CGSize(600,600));
     device = MTLCreateSystemDefaultDevice();
+    commandQueue = device.makeCommandQueue();
+    metalDefaultLibrary = device.makeDefaultLibrary();
+
+    frame = CGRect(CGPoint(0,0), CGSize(600,600));
     view = MTKView.alloc().initWithFrame(frame, device);
     view.depthStencilPixelFormat = MTLPixelFormat.Depth32Float;
-    view.clearColor = MTLClearColor(0.0, 0.0, 1.0, 1.0);
+    view.clearColor = MTLClearColor(1.0, 0.0, 0.0, 1.0);
 
     win = new shared Window(600, 600, "Test");
     win.doTerminateOnClose(true);
     win.setContentView(view);
     win.start();
     win.show();
-    //createTriangle();
-    createCube();
-    createDefaultLibrary();
-    commandQueue = device.makeCommandQueue();
-    createRenderPipeline();
 
+    writeln("Passed init.");
+
+    createRenderPipeline();
+    writeln("Passed createRenderPipeline.");
+    createTriangleMesh();
+    createCubeMesh();
+    writeln("Passed createTriangleMesh.");
     spawn(&renderThread);
     while (atomicLoad(running))
     {

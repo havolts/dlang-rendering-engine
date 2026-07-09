@@ -1,4 +1,17 @@
 
+struct VertexData
+{
+    float4 position;
+    float4 color;
+}
+
+struct TransformationData
+{
+    float4x4 modelMatrix;
+    float4x4 viewMatrix;
+    float4x4 perspectiveMatrix;
+}
+
 struct float2
 {
     float x;
@@ -10,6 +23,13 @@ struct float3
     float x;
     float y;
     float z;
+
+    this(float inX, float inY, float inZ)
+    {
+        x = inX;
+        y = inY;
+        z = inZ;
+    }
 
     float3 opUnary(string op)() const if (op == "-")
     {

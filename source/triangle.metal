@@ -18,12 +18,9 @@ struct TransformationData {
     float4x4 perspectiveMatrix;
 };
 
-
-
-
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
-             constant VertexData* vertexData,
-             constant TransformationData* transformationData)
+             constant VertexData* vertexData [[buffer(0)]],
+             constant TransformationData* transformationData [[buffer(1)]])
 {
     VertexOut out;
     out.position = transformationData->perspectiveMatrix * transformationData->viewMatrix * transformationData->modelMatrix * float4(vertexData[vertexID].position);
