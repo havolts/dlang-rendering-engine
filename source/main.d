@@ -7,6 +7,7 @@ import mesh;
 import renderer;
 import types;
 import texture;
+import camera;
 
 import std.stdio;
 import std.math;
@@ -98,10 +99,23 @@ void main()
     window.show();
 
     meshes ~= createCubeMesh(renderer);
+    meshes ~= createCubeMesh(renderer);
+    meshes ~= createCubeMesh(renderer);
 
     foreach(Mesh mesh; meshes)
     {
         mesh.makeBuffer(device);
+    }
+
+    Camera camera = new Camera();
+
+    void Update(float delta)
+    {
+        meshes[1].position.x = 1f;
+        meshes[2].position.x = -1f;
+
+        camera.position.y = 1f;
+        camera.position.z = 3f;
     }
 
     auto renderThread = new Thread(
@@ -114,13 +128,13 @@ void main()
                 float delta = (frameStart - lastFrameTime).total!"usecs" / 1_000_000f;
                 lastFrameTime = frameStart;
 
-                meshes[0].position.z -= 1 * delta;
-                meshes[0].rotation.x -= 1 * delta;
+                Update(delta);
 
-                renderer.renderFrame(view, meshes);
+                renderer.renderFrame(view, meshes, camera);
             }
         }
     );
+
     renderThread.start();
 
     while (atomicLoad(running))

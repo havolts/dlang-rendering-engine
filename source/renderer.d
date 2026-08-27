@@ -6,7 +6,7 @@ import std.stdio;
 import std.math;
 import types;
 import texture;
-
+import camera;
 
 class Renderer
 {
@@ -28,7 +28,7 @@ class Renderer
         this.perspectiveMatrix.rowToColumnMajor();
     }
 
-    void renderFrame(MTKView view, Mesh[] meshes)
+    void renderFrame(MTKView view, Mesh[] meshes, Camera camera)
     {
         auto pool = NSAutoreleasePool.alloc().init();
         scope(exit) pool.drain();
@@ -80,21 +80,11 @@ class Renderer
             writeln("Failed cube check.");
         }
 
-        float3 R = float3(1f,0,0);
-        float3 U = float3(0,1f,0);
-        float3 F = float3(0,0,-1f);
-        float3 P = float3(0,0,1f);
-
-        float4x4 viewMatrix = float4x4([[R.x, R.y, R.z, dot(-R, P)],
-                                        [U.x, U.y, U.z, dot(-U, P)],
-                                        [-F.x, -F.y, -F.z, dot(F, P)],
-                                        [0f , 0f , 0f , 1f]]);
-
-        viewMatrix.rowToColumnMajor();
+        camera.Update();
 
         foreach(Mesh mesh; meshes)
         {
-            mesh.encodeRenderCommand(renderEncoder, viewMatrix, perspectiveMatrix);
+            mesh.encodeRenderCommand(renderEncoder, camera.viewMatrix, perspectiveMatrix);
         }
 
         renderEncoder.endEncoding();

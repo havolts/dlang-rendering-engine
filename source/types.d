@@ -46,6 +46,69 @@ struct float4
     float w;
 }
 
+struct float3x3
+{
+    float[3][3] matrix;
+
+    float3 opBinary(string op)(float3 other) const if (op == "*")
+    {
+        float3 result;
+
+        result.x = this.matrix[0][0]*other.x + this.matrix[0][1]*other.y + this.matrix[0][2]*other.z;
+        result.y = this.matrix[1][0]*other.x + this.matrix[1][1]*other.y + this.matrix[1][2]*other.z;
+        result.z = this.matrix[2][0]*other.x + this.matrix[2][1]*other.y + this.matrix[2][2]*other.z;
+
+        return result;
+    }
+
+    float3x3 opBinary(string op)(float3x3 other) const if (op == "+")
+    {
+        float3x3 result;
+        for(int i = 0; i < 3; i++)
+        {
+            for(int j = 0; j < 3; j++)
+            {
+                result.matrix[i][j] = this.matrix[i][j] + other.matrix[i][j];
+            }
+        }
+        return result;
+    }
+
+    float3x3 opBinary(string op)(float3x3 other) const if (op == "*")
+    {
+        float3x3 result;
+        for(int i = 0; i < 3; i++)
+        {
+            float[3] row = this.matrix[i];
+            for(int j = 0; j < 3; j++)
+            {
+                float[3] column = other.getColumn(j);
+                float total = 0;
+                for(int k = 0; k < 3; k++)
+                {
+                    total += (row[k]*column[k]);
+                }
+                result.matrix[i][j] = total;
+            }
+        }
+        return result;
+    }
+
+    void rowToColumnMajor()
+    {
+        float[3][3] copy = matrix;
+        matrix[0] = [copy[0][0], copy[1][0], copy[2][0]];
+        matrix[1] = [copy[0][1], copy[1][1], copy[2][1]];
+        matrix[2] = [copy[0][2], copy[1][2], copy[2][2]];
+    }
+
+    float[3] getColumn(int i)
+    {
+        float[3] column = [matrix[0][i], matrix[1][i], matrix[2][i]];
+        return column;
+    }
+}
+
 struct float4x4
 {
     float[4][4] matrix;

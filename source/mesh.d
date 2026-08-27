@@ -95,14 +95,14 @@ public class Mesh
             writeln("renderCommandEncoder failed.");
         }
 
-        rotationX = float4x4([[cos(rotation.x),0,sin(rotation.x),0],
-                            [0,1f,0,0],
-                            [-sin(rotation.x),0,cos(rotation.x),0],
+        rotationX = float4x4([[1f,0,0,0],
+                            [0,cos(rotation.x),sin(rotation.x),0],
+                            [0,-sin(rotation.x),cos(rotation.x),0],
                             [0,0,0,1f]]);
         //writeln(rotationX.matrix);
-        rotationY = float4x4([[1f,0,0,0],
-                            [0,cos(rotation.y),sin(rotation.y),0],
-                            [0,-sin(rotation.y),cos(rotation.y),0],
+        rotationY = float4x4([[cos(rotation.y),0,sin(rotation.y),0],
+                            [0,1f,0,0],
+                            [-sin(rotation.y),0,cos(rotation.y),0],
                             [0,0,0,1f]]);
         rotationZ = float4x4([[cos(rotation.z),-sin(rotation.z),0,0],
                             [sin(rotation.z),cos(rotation.z),0,0],
