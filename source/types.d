@@ -2,7 +2,8 @@
 struct VertexData
 {
     float4 position;
-    float4 color;
+    float2 textureCoordinates;
+    uint textureIndex;
 }
 
 struct TransformationData

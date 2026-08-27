@@ -3,30 +3,21 @@ import macoswindowing;
 import std.math;
 import std.stdio;
 import types;
-
-float4x4 matrix_perspective_right_hand(float fovyRadians, float aspect, float nearZ, float farZ)
-{
-    float ys = 1 / std.math.tan(fovyRadians * 0.5f);
-    float xs = ys / aspect;
-    float zs = farZ / (nearZ - farZ);
-    float4x4 matrix = float4x4([[xs,0f,0f,0f],
-                                [0f,ys,0f,0f],
-                                [0f,0f,zs,nearZ*zs],
-                                [0f,0f,-1f,0f]]);
-    return matrix;
-}
+import texture;
 
 public class Mesh
 {
-    shared Window win;
     VertexData[] vertices;
     uint[] indices;
     NSUInteger indexCount;
+    void*[] textures;
 
     float4x4 translationMatrix = float4x4([[1f,0,0,0],
                                            [0,1f,0,0],
-                                           [0,0,1f,-1f],
+                                           [0,0,1f,0f],
                                            [0,0,0,1f]]);
+
+    float3 position = float3(0f,0f,0f);
 
     float3 rotation = float3(0f,0f,0f);
     float4x4 rotationX;
@@ -39,26 +30,11 @@ public class Mesh
     MTLBuffer indexBuffer;
     MTLBuffer transformationBuffer;
 
-    this(VertexData[] inVertices, uint[] inIndices, NSUInteger inIndexCount, shared Window inWin, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState)
+    this(VertexData[] inVertices, uint[] inIndices, NSUInteger inIndexCount, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState)
     {
         vertices = inVertices;
         indices = inIndices;
         indexCount = inIndexCount;
-        win = inWin;
-
-        rotationX = float4x4([[cos(rotation.x),0,sin(rotation.x),0],
-                              [0,1f,0,0],
-                              [-sin(rotation.x),0,cos(rotation.x),0],
-                              [0,0,0,1f]]);
-        rotationY = float4x4([[1f,0,0,0],
-                              [0,cos(rotation.y),sin(rotation.y),0],
-                              [0,-sin(rotation.y),cos(rotation.y),0],
-                              [0,0,0,1f]]);
-        rotationZ = float4x4([[cos(rotation.z),-sin(rotation.z),0,0],
-                              [sin(rotation.z),cos(rotation.z),0,0],
-                              [0,0,1f,0],
-                              [0,0,0,1f]]);
-        rotationMatrix = rotationX * rotationY * rotationZ;
 
         if(vertices is null)
         {
@@ -68,9 +44,39 @@ public class Mesh
         {
             writeln("indices failed.");
         }
-        if(win is null)
+    }
+
+    this(VertexData[] inVertices, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState)
+    {
+        vertices = inVertices;
+
+        if(vertices is null)
         {
-            writeln("win failed.");
+            writeln("vertices failed.");
+        }
+        if(indices is null)
+        {
+            writeln("indices failed.");
+        }
+    }
+
+    this(VertexData[] inVertices, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState, Texture[] inTextures)
+    {
+        vertices = inVertices;
+        void*[] inMTLTextures = new void*[inTextures.length];
+        for(int i = 0; i < inTextures.length; i++)
+        {
+            inMTLTextures[i] = cast(void*) inTextures[i].texture;
+        }
+        textures = inMTLTextures;
+
+        if(vertices is null)
+        {
+            writeln("vertices failed.");
+        }
+        if(textures is null)
+        {
+            writeln("texture failed.");
         }
     }
 
@@ -78,7 +84,7 @@ public class Mesh
     {
         vertexBuffer = device.makeBuffer(vertices.ptr, vertices.length * VertexData.sizeof, MTLResourceOptions.storageModeShared);
         transformationBuffer = device.makeBuffer(TransformationData.sizeof, MTLResourceOptions.storageModeShared);
-        indexBuffer = device.makeBuffer(indices.ptr, indices.length * uint.sizeof, MTLResourceOptions.storageModeShared);
+        if(indices.length > 0) indexBuffer = device.makeBuffer(indices.ptr, indices.length * uint.sizeof, MTLResourceOptions.storageModeShared);
     }
 
     void encodeRenderCommand(MTLRenderCommandEncoder renderCommandEncoder, float4x4 viewMatrix, float4x4 perspectiveMatrix)
@@ -104,6 +110,11 @@ public class Mesh
                             [0,0,0,1f]]);
         rotationMatrix = rotationX * rotationY * rotationZ;
 
+        translationMatrix = float4x4([[1f,0,0,position.x],
+                                      [0,1f,0,position.y],
+                                      [0,0,1f,position.z],
+                                      [0,0,0,1f]]);
+
         float4x4 modelMatrix = translationMatrix * rotationMatrix;
 
         modelMatrix.rowToColumnMajor();
@@ -116,11 +127,16 @@ public class Mesh
         *(cast(TransformationData*) contentsPtr) = transformationData;
 
         renderCommandEncoder.setVertexBuffer(vertexBuffer, 0, 0);
+        NSRange range = NSMakeRange(0,textures.length);
+        renderCommandEncoder.setFragmentTextures(textures.ptr, range);
         renderCommandEncoder.setVertexBuffer(transformationBuffer, 0, 1);
 
+
         MTLPrimitiveType typeTriangle = MTLPrimitiveType.triangle;
-        NSUInteger indexBufferOffset = 0;
+        //NSUInteger indexBufferOffset = 0;
+        NSUInteger vertexStart = 0;
+        NSUInteger vertexCount = vertices.length;
+        renderCommandEncoder.drawPrimitives(typeTriangle, vertexStart, vertexCount);
         //renderCommandEncoder.drawIndexedPrimitives(typeTriangle,indexCount, MTLIndexType.uint32, indexBuffer, indexBufferOffset);
-        renderCommandEncoder.drawIndexedPrimitives(typeTriangle,indexCount, MTLIndexType.uint32, indexBuffer, indexBufferOffset);
     }
 }
