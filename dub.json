@@ -1,6 +1,6 @@
 {
   "authors": ["havolts"],
-  "copyright": "Copyright © 2025, havolts",
+  "copyright": "Copyright © 2026, havolts",
   "dependencies": {
     "macoswindowing": {
       "repository": "git+https://github.com/havolts/macoswindowing-dlang.git",
