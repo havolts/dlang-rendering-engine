@@ -1,4 +1,7 @@
-import metalrendering;
+import metal;
+import metalkit;
+import coregraphics;
+import cocoa;
 import macoswindowing;
 import std.math;
 import std.stdio;

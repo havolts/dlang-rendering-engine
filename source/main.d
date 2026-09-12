@@ -1,23 +1,30 @@
 // renderengine/source/main.d
 module main;
 
-import macoswindowing.window;
-import metalrendering;
-import mesh;
-import renderer;
-import types;
-import texture;
 import camera;
+import cocoa;
+import coregraphics;
+import coreanimation;
+import macoswindowing.window;
+import osxwindowing;
 
-import std.stdio;
-import std.math;
+import mesh;
+import metal;
+import metalkit;
+import renderer;
+import texture;
+import types;
+
 import core.atomic;
-import core.time;
 import core.thread;
+import core.time;
+import std.math;
+import std.stdio;
 
-
-shared Window window;
+OSXApplication app;
+OSXWindow window;
 CGRect frame;
+
 shared bool running = true;
 
 Mesh createCubeMesh(Renderer renderer)
@@ -77,9 +84,12 @@ Mesh createCubeMesh(Renderer renderer)
 
 void main()
 {
+    app = new OSXApplication();
     MTLDevice device = MTLCreateSystemDefaultDevice();
 
-    window = new shared Window(600, 600, "Test");
+    window = app.CreateWindow(600, 600, "window 1");
+    window.terminateApp = true;
+
 
     float aspectRatio = window.width/window.height;
 
@@ -92,11 +102,11 @@ void main()
     view.colorPixelFormat = MTLPixelFormat.BGRA8Unorm_sRGB;
     view.depthStencilPixelFormat = MTLPixelFormat.Depth32Float;
     view.clearColor = MTLClearColor(1.0, 0.0, 0.0, 1.0);
+    CAMetalLayer layer = view.metalLayer();
+    layer.displaySyncEnabled = false;
 
-    window.doTerminateOnClose(true);
     window.setContentView(view);
-    window.start();
-    window.show();
+
 
     meshes ~= createCubeMesh(renderer);
     meshes ~= createCubeMesh(renderer);
@@ -109,7 +119,7 @@ void main()
 
     Camera camera = new Camera();
 
-    void Update(float delta)
+    void Start()
     {
         meshes[1].position.x = 1f;
         meshes[2].position.x = -1f;
@@ -118,19 +128,33 @@ void main()
         camera.position.z = 3f;
     }
 
+    void Update(float delta)
+    {
+    }
+
     auto renderThread = new Thread(
         {
-            MonoTime lastFrameTime = MonoTime.currTime;
+            int fpsLimit = 60;
+            float delta = 0f;
+
+            Start();
 
             while (atomicLoad(running))
             {
                 MonoTime frameStart = MonoTime.currTime;
-                float delta = (frameStart - lastFrameTime).total!"usecs" / 1_000_000f;
-                lastFrameTime = frameStart;
 
                 Update(delta);
-
                 renderer.renderFrame(view, meshes, camera);
+
+                Duration elapsed = MonoTime.currTime - frameStart;
+                double targetMs = 1000.0 / fpsLimit;
+                double msToSleep = targetMs - elapsed.total!"usecs" / 1000.0;
+                if (msToSleep > 0) Thread.sleep(dur!"msecs"(cast(int) (msToSleep*4/5)));
+                while ((MonoTime.currTime - frameStart) < dur!"usecs"(cast(int)(targetMs*1000)))
+                {}
+
+                delta = (MonoTime.currTime - frameStart).total!"usecs" / 1_000_000f;
+                writeln("FPS: ", 1f/delta);
             }
         }
     );

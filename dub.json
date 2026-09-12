@@ -2,12 +2,12 @@
   "authors": ["havolts"],
   "copyright": "Copyright © 2026, havolts",
   "dependencies": {
-    "macoswindowing": {
+    "d-windowing": {
       "repository": "git+https://github.com/havolts/macoswindowing-dlang.git",
       "version": "~main"
     },
-    "metalrendering": {
-      "repository": "git+https://github.com/havolts/dlang-metal-bindings.git",
+    "d-apple": {
+      "repository": "git+https://github.com/havolts/d-apple.git",
       "version": "~main"
     }
   },

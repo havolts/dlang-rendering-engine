@@ -1,6 +1,9 @@
 module renderer;
 import macoswindowing.window;
-import metalrendering;
+import metal;
+import metalkit;
+import coregraphics;
+import cocoa;
 import mesh;
 import std.stdio;
 import std.math;
