@@ -10,6 +10,9 @@ import std.stdio;
 import std.file;
 import std.array;
 import std.conv;
+import std.algorithm : startsWith;
+import std.string : strip;
+import std.path : dirName, buildPath;
 import types;
 import texture;
 import mesh;
@@ -17,125 +20,180 @@ import renderer;
 
 class MeshLoader
 {
-    // needs to turn the data from a file into:
-    //
-    // VertexData[] inVertices
-    // indices = inIndices;
-    // indexCount = inIndexCount;
-    // Texture[] inTextures
-
-    /*
-        struct VertexData
-        {
-            float4 position;
-            float2 textureCoordinates;
-            uint textureIndex;
-        }
-    */
-
     VertexData[] vertices;
+    Texture[] textures;
+    int[string] materialTextureIndex;
+    int currentTextureIndex = 0;
 
     Mesh loadObj(string filepath, Renderer renderer)
     {
+        vertices.length = 0;
+        textures.length = 0;
+        materialTextureIndex = null;
+        currentTextureIndex = 0;
+
         Mesh mesh;
-        float4[] positions; // Positions of all vertices
-        float2[] textureCoordinates; // textureCoordinates of all vertices
-        float3[] normals; // normals for all vertices
+        float4[] positions;
+        float2[] textureCoordinates;
+        float3[] normals;
         uint[] indices;
 
         File file = File(filepath, "r");
-        string s = file.readln();
-        while(s != null)
-        {
-            if(s[0] == '#')
-            {
+        auto s = file.readln();
 
-            }
-            else if(s[0] == 'v')
+        while (s !is null)
+        {
+            auto line = s.strip();
+            if (line.length == 0)
             {
-                if(s[1] == ' ')
+                s = file.readln();
+                continue;
+            }
+
+            if (line[0] == '#')
+            {
+                // comment
+            }
+            else if (line[0] == 'v')
+            {
+                if (line.length >= 2 && line[1] == ' ')
                 {
-                    s = s[1..s.length];
-                    string[] temp = s.split();
+                    auto temp = line[1 .. $].split();
                     float[4] vertexPosition;
-                    for(int i = 0; i < temp.length; i++)
-                    {
-                        vertexPosition[i] =  to!float(temp[i]);
-                    }
-                    if(isNaN(vertexPosition[3])) vertexPosition[3] = 1.0f;
+                    for (int i = 0; i < temp.length; i++)
+                        vertexPosition[i] = to!float(temp[i]);
+
+                    if (isNaN(vertexPosition[3]))
+                        vertexPosition[3] = 1.0f;
+
                     positions ~= float4(vertexPosition);
                 }
-
-                if(s[1] == 't')
+                else if (line.length >= 3 && line[1] == 't')
                 {
-                    s = s[2..s.length];
-                    string[] temp = s.split();
+                    auto temp = line[2 .. $].split();
                     float[2] vertexTextureCoordinates;
-                    for(int i = 0; i < temp.length; i++)
-                    {
-                        vertexTextureCoordinates[i] =  to!float(temp[i]);
-                    }
+                    for (int i = 0; i < temp.length; i++)
+                        vertexTextureCoordinates[i] = to!float(temp[i]);
+
                     textureCoordinates ~= float2(vertexTextureCoordinates);
                 }
-
-                if(s[1] == 'n')
+                else if (line.length >= 3 && line[1] == 'n')
                 {
-                    s = s[2..s.length];
-                    string[] temp = s.split();
+                    auto temp = line[2 .. $].split();
                     float[3] vertexNormals;
-                    for(int i = 0; i < temp.length; i++)
-                    {
-                        vertexNormals[i] =  to!float(temp[i]);
-                    }
+                    for (int i = 0; i < temp.length; i++)
+                        vertexNormals[i] = to!float(temp[i]);
+
                     normals ~= float3(vertexNormals);
                 }
             }
-            else if (s[0] == 'f')
+            else if (line[0] == 'f')
             {
-                s = s[1..s.length];
-                string[] faceVertices = s.split();
+                auto faceVertices = line[1 .. $].split();
                 int[] faceIndices;
 
-                foreach(string vertex; faceVertices)
+                foreach (vertex; faceVertices)
                 {
-                    string[] data = vertex.split('/');
-                    int v = to!int(data[0]);
-                    int vt = to!int(data[1]);
-                    int vn = to!int(data[2]);
+                    auto data = vertex.split('/');
 
-                    VertexData vertexData = VertexData(positions[v-1], textureCoordinates[vt-1], 0);
-                    vertices ~= vertexData;
+                    int v = parseObjIndex(data[0], cast(int)positions.length);
+
+                    float2 tex = float2(0f, 0f);
+                    if (data.length > 1 && data[1].length > 0)
+                    {
+                        int vt = parseObjIndex(data[1], cast(int)textureCoordinates.length);
+                        tex = textureCoordinates[vt];
+                        tex.y = 1.0f - tex.y;
+                    }
+
+                    vertices ~= VertexData(
+                        positions[v],
+                        tex,
+                        cast(uint)currentTextureIndex
+                    );
+
                     faceIndices ~= cast(int)(vertices.length - 1);
                 }
 
-                //writeln(faceIndices);
-
-                for(int i = 1; i+1 < faceIndices.length; i ++)
+                for (int i = 1; i + 1 < faceIndices.length; i++)
                 {
                     indices ~= faceIndices[0];
                     indices ~= faceIndices[i];
-                    indices ~= faceIndices[i+1];
+                    indices ~= faceIndices[i + 1];
                 }
-                //writeln(indices);
             }
+            else if (line.startsWith("mtllib "))
+            {
+                foreach (mtlName; line[7 .. $].split())
+                {
+                    auto mtlPath = buildPath(dirName(filepath), mtlName);
+                    loadMtl(mtlPath, renderer.device);
+                }
+            }
+            else if (line.startsWith("usemtl "))
+            {
+                string matName = line[7 .. $].strip().idup;
+                currentTextureIndex = (matName in materialTextureIndex)
+                    ? materialTextureIndex[matName]
+                    : 0;
+            }
+
             s = file.readln();
         }
 
         uint indexCount = cast(uint)indices.length;
-        //writeln("\n indices: ", indices, " \n indexCount: ", indexCount);
-        // this(VertexData[] inVertices, uint[] inIndices, NSUInteger inIndexCount, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState)
-        mesh = new Mesh(vertices, indices, indexCount, &renderer.renderPipelineState, &renderer.depthStencilState);
+
+        mesh = new Mesh(
+            vertices,
+            indices,
+            indexCount,
+            &renderer.renderPipelineState,
+            &renderer.depthStencilState,
+            textures
+        );
+
         return mesh;
     }
 
-    float3 calculateSurfaceNormal(float3 a, float3 b, float3 c)
+    private void loadMtl(string mtlPath, MTLDevice device)
     {
-        float3 U = b - a;
-        float3 V = c - a;
-        float3 N;
-        N.x = (U.y * V.z) - (U.z * V.y);
-        N.y = (U.z * V.x) - (U.x * V.z);
-        N.z = (U.x * V.y) - (U.y * V.x);
-        return N;
+        if (!exists(mtlPath))
+        {
+            writeln("MTL file not found: ", mtlPath);
+            return;
+        }
+
+        string currentMaterial;
+        File mtl = File(mtlPath, "r");
+
+        foreach (rawLine; mtl.byLine())
+        {
+            auto line = rawLine.strip();
+            if (line.length == 0 || line[0] == '#')
+                continue;
+
+            auto parts = line.split();
+            if (parts.length < 2)
+                continue;
+
+            if (parts[0] == "newmtl")
+            {
+                currentMaterial = parts[1].idup;
+            }
+            else if (parts[0] == "map_Kd")
+            {
+                string texName = parts[1].idup;
+                auto texPath = buildPath(dirName(mtlPath), texName);
+
+                textures ~= new Texture(texPath, device);
+                materialTextureIndex[currentMaterial] = cast(int)(textures.length - 1);
+            }
+        }
+    }
+
+    private int parseObjIndex(string token, int count)
+    {
+        int idx = to!int(token);
+        return idx < 0 ? count + idx : idx - 1;
     }
 }

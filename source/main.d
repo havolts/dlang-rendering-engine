@@ -54,17 +54,9 @@ void main()
     window.setContentView(view);
 
     MeshLoader loader = new MeshLoader();
-    Texture grassSideTexture = new Texture("source/assets/grass-side.jpg", renderer.device);
-    Texture[] textures = [];
-    void*[] inMTLTextures = new void*[textures.length];
-    for(int i = 0; i < textures.length; i++)
-    {
-        inMTLTextures[i] = cast(void*) textures[i].texture;
-    }
 
     //loader.load("source/assets/square.obj", renderer);
-    meshes ~= loader.loadObj("source/assets/Suzanne.obj", renderer);
-    meshes[0].textures = inMTLTextures;
+    meshes ~= loader.loadObj("source/assets/textured_cube.obj", renderer);
 
     foreach(Mesh mesh; meshes)
     {

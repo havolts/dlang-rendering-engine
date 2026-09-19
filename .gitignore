@@ -14,9 +14,12 @@ macoswindowing2-test-*
 *.o
 *.obj
 *.mtl
+*.blend
+*.blend*
 *.lst
 renderengine
 default.metallib
 triangle.air
 .DS_Store
+*.DS_Store
 codeExplanation.txt

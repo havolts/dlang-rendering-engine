@@ -83,6 +83,19 @@ public class Mesh
         }
     }
 
+    this(VertexData[] inVertices, uint[] inIndices, NSUInteger inIndexCount, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState, Texture[] inTextures)
+    {
+        this(inVertices, inIndices, inIndexCount, inMetalRenderPSO, inDepthStencilState);
+
+        void*[] inMTLTextures = new void*[inTextures.length];
+
+        foreach (i, tex; inTextures)
+        {
+            inMTLTextures[i] = cast(void*) tex.texture;
+        }
+        textures = inMTLTextures;
+    }
+
     void makeBuffer(MTLDevice device)
     {
         vertexBuffer = device.makeBuffer(vertices.ptr, vertices.length * VertexData.sizeof, MTLResourceOptions.storageModeShared);
