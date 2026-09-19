@@ -1,3 +1,4 @@
+import std.math;
 
 struct VertexData
 {
@@ -17,6 +18,18 @@ struct float2
 {
     float x;
     float y;
+
+    this(float inX, float inY)
+    {
+        x = inX;
+        y = inY;
+    }
+
+    this(float[2] input)
+    {
+        x = input[0];
+        y = input[1];
+    }
 }
 
 struct float3
@@ -32,9 +45,49 @@ struct float3
         z = inZ;
     }
 
+    this(float[3] input)
+    {
+        x = input[0];
+        y = input[1];
+        z = input[2];
+    }
+
     float3 opUnary(string op)() const if (op == "-")
     {
         return float3(-x, -y, -z);
+    }
+
+    float3 opBinary(string op)(float3 other) const if (op == "+")
+    {
+        float3 result;
+        result.x = this.x + other.x;
+        result.y = this.y + other.y;
+        result.z = this.z + other.z;
+        return result;
+    }
+
+    float3 opBinary(string op)(float3 other) const if (op == "-")
+    {
+        float3 result;
+        result.x = this.x - other.x;
+        result.y = this.y - other.y;
+        result.z = this.z - other.z;
+        return result;
+    }
+
+    float3 opBinary(string op)(float other) const if (op == "/")
+    {
+        float3 result;
+        result.x = this.x / other;
+        result.y = this.y / other;
+        result.z = this.z / other;
+        return result;
+    }
+
+    float magnitude()
+    {
+        float sqrdMagnitude = (this.x * this.x) + (this.y * this.y) + (this.z * this.z);
+        return sqrt(sqrdMagnitude);
     }
 }
 
@@ -44,6 +97,22 @@ struct float4
     float y;
     float z;
     float w;
+
+    this(float inX, float inY, float inZ, float inW)
+    {
+        x = inX;
+        y = inY;
+        z = inZ;
+        w = inW;
+    }
+
+    this(float[4] input)
+    {
+        x = input[0];
+        y = input[1];
+        z = input[2];
+        w = input[3];
+    }
 }
 
 struct float3x3

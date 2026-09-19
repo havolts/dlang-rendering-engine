@@ -13,6 +13,7 @@ macoswindowing2-test-*
 *.pdb
 *.o
 *.obj
+*.mtl
 *.lst
 renderengine
 default.metallib

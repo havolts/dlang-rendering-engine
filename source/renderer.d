@@ -73,7 +73,7 @@ class Renderer
             writeln("Failed renderEncoder check.");
             return;
         }
-        renderEncoder.setFrontFacingWinding(MTLWinding.MTLWindingClockwise);
+        renderEncoder.setFrontFacingWinding(MTLWinding.MTLWindingCounterClockwise);
         renderEncoder.setCullMode(MTLCullMode.MTLCullModeBack);
         renderEncoder.setRenderPipelineState(renderPipelineState);
         renderEncoder.setDepthStencilState(depthStencilState);

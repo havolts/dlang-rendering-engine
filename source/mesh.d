@@ -87,7 +87,7 @@ public class Mesh
     {
         vertexBuffer = device.makeBuffer(vertices.ptr, vertices.length * VertexData.sizeof, MTLResourceOptions.storageModeShared);
         transformationBuffer = device.makeBuffer(TransformationData.sizeof, MTLResourceOptions.storageModeShared);
-        if(indices.length > 0) indexBuffer = device.makeBuffer(indices.ptr, indices.length * uint.sizeof, MTLResourceOptions.storageModeShared);
+        indexBuffer = device.makeBuffer(indices.ptr, indices.length * uint.sizeof, MTLResourceOptions.storageModeShared);
     }
 
     void encodeRenderCommand(MTLRenderCommandEncoder renderCommandEncoder, float4x4 viewMatrix, float4x4 perspectiveMatrix)
@@ -136,10 +136,10 @@ public class Mesh
 
 
         MTLPrimitiveType typeTriangle = MTLPrimitiveType.triangle;
-        //NSUInteger indexBufferOffset = 0;
+        NSUInteger indexBufferOffset = 0;
         NSUInteger vertexStart = 0;
         NSUInteger vertexCount = vertices.length;
-        renderCommandEncoder.drawPrimitives(typeTriangle, vertexStart, vertexCount);
-        //renderCommandEncoder.drawIndexedPrimitives(typeTriangle,indexCount, MTLIndexType.uint32, indexBuffer, indexBufferOffset);
+        //renderCommandEncoder.drawPrimitives(typeTriangle, vertexStart, vertexCount);
+        renderCommandEncoder.drawIndexedPrimitives(typeTriangle,indexCount, MTLIndexType.uint32, indexBuffer, indexBufferOffset);
     }
 }
