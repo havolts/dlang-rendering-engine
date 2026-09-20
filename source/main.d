@@ -69,7 +69,7 @@ void main()
     {
 
         camera.position.y = 1f;
-        camera.position.z = 3f;
+        camera.position.z = 10f;
     }
 
     void Update(float delta)

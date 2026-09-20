@@ -84,6 +84,17 @@ struct float3
         return result;
     }
 
+    float3 opBinary(string op)(float other) const if (op == "*")
+    {
+        float3 result;
+        result.x = this.x * other;
+        result.y = this.y * other;
+        result.z = this.z * other;
+        return result;
+    }
+
+
+
     float magnitude()
     {
         float sqrdMagnitude = (this.x * this.x) + (this.y * this.y) + (this.z * this.z);
