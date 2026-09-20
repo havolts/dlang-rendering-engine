@@ -2,6 +2,7 @@
 module main;
 
 import camera;
+import meshloader;
 import cocoa;
 import coregraphics;
 import coreanimation;
@@ -26,61 +27,6 @@ OSXWindow window;
 CGRect frame;
 
 shared bool running = true;
-
-Mesh createCubeMesh(Renderer renderer)
-{
-    VertexData[] cubeVertices =
-    [
-        //front
-        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        {{-0.5,  0.5,  0.5, 1.0f}, {0.0f, 0.0f}, 0},
-        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        {{ 0.5, -0.5,  0.5, 1.0f}, {1.0f, 1.0f}, 0},
-        //right
-        {{ 0.5,  0.5,  0.5, 1.0f}, {0.0f, 0.0f}, 0},
-        {{ 0.5,  0.5, -0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        {{ 0.5, -0.5,  0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        {{ 0.5,  0.5, -0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        {{ 0.5, -0.5, -0.5, 1.0f}, {1.0f, 1.0f}, 0},
-        {{ 0.5, -0.5,  0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        //back
-        {{-0.5, -0.5, -0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        {{ 0.5,  0.5, -0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        {{-0.5,  0.5, -0.5, 1.0f}, {0.0f, 0.0f}, 0},
-        {{-0.5, -0.5, -0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        {{ 0.5, -0.5, -0.5, 1.0f}, {1.0f, 1.0f}, 0},
-        {{ 0.5,  0.5, -0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        //left
-        {{-0.5, -0.5, -0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        {{-0.5,  0.5, -0.5, 1.0f}, {0.0f, 0.0f}, 0},
-        {{-0.5,  0.5,  0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        {{-0.5, -0.5, -0.5, 1.0f}, {0.0f, 1.0f}, 0},
-        {{-0.5,  0.5,  0.5, 1.0f}, {1.0f, 0.0f}, 0},
-        {{-0.5, -0.5,  0.5, 1.0f}, {1.0f, 1.0f}, 0},
-        //top
-        {{-0.5,  0.5,  0.5, 1.0f}, {0.0f, 1.0f}, 2},
-        {{-0.5,  0.5, -0.5, 1.0f}, {0.0f, 0.0f}, 2},
-        {{ 0.5,  0.5, -0.5, 1.0f}, {1.0f, 0.0f}, 2},
-        {{-0.5,  0.5,  0.5, 1.0f}, {0.0f, 1.0f}, 2},
-        {{ 0.5,  0.5, -0.5, 1.0f}, {1.0f, 0.0f}, 2},
-        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 1.0f}, 2},
-        //bottom
-        {{-0.5, -0.5, -0.5, 1.0f}, {0.0f, 1.0f}, 1},
-        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 0.0f}, 1},
-        {{ 0.5, -0.5,  0.5, 1.0f}, {1.0f, 0.0f}, 1},
-        {{-0.5, -0.5, -0.5, 1.0f}, {0.0f, 1.0f}, 1},
-        {{ 0.5, -0.5,  0.5, 1.0f}, {1.0f, 0.0f}, 1},
-        {{ 0.5, -0.5, -0.5, 1.0f}, {1.0f, 1.0f}, 1},
-    ];
-    Texture grassSideTexture = new Texture("source/assets/grass-side.jpg", renderer.device);
-    Texture grassTopTexture = new Texture("source/assets/grass-top.jpg", renderer.device);
-    Texture dirtTexture = new Texture("source/assets/dirt.jpg", renderer.device);
-    Texture[] textures = [grassSideTexture, dirtTexture, grassTopTexture];
-    Mesh mesh = new Mesh(cubeVertices, &renderer.renderPipelineState, &renderer.depthStencilState, textures);
-    return mesh;
-}
 
 void main()
 {
@@ -107,10 +53,10 @@ void main()
 
     window.setContentView(view);
 
+    MeshLoader loader = new MeshLoader();
 
-    meshes ~= createCubeMesh(renderer);
-    meshes ~= createCubeMesh(renderer);
-    meshes ~= createCubeMesh(renderer);
+    //loader.load("source/assets/square.obj", renderer);
+    meshes ~= loader.loadObj("source/assets/textured_cube.obj", renderer);
 
     foreach(Mesh mesh; meshes)
     {
@@ -121,15 +67,14 @@ void main()
 
     void Start()
     {
-        meshes[1].position.x = 1f;
-        meshes[2].position.x = -1f;
 
         camera.position.y = 1f;
-        camera.position.z = 3f;
+        camera.position.z = 10f;
     }
 
     void Update(float delta)
     {
+        meshes[0].rotation.y += 1.0f * delta;
     }
 
     auto renderThread = new Thread(
@@ -154,7 +99,7 @@ void main()
                 {}
 
                 delta = (MonoTime.currTime - frameStart).total!"usecs" / 1_000_000f;
-                writeln("FPS: ", 1f/delta);
+                //writeln("FPS: ", 1f/delta);
             }
         }
     );
