@@ -176,7 +176,7 @@ class MeshLoader
 
         uint indexCount = cast(uint) indices.length;
 
-        return new Mesh(
+        Mesh mesh = new Mesh(
             vertices,
             indices,
             indexCount,
@@ -184,6 +184,9 @@ class MeshLoader
             &renderer.depthStencilState,
             textures
         );
+        mesh.makeBuffer(renderer.device);
+
+        return mesh;
     }
 
     private void loadMtl(string mtlPath, MTLDevice device)

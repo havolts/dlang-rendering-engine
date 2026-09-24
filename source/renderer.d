@@ -10,6 +10,7 @@ import std.math;
 import types;
 import texture;
 import camera;
+import node;
 
 class Renderer
 {
@@ -31,7 +32,7 @@ class Renderer
         this.perspectiveMatrix.rowToColumnMajor();
     }
 
-    void renderFrame(MTKView view, Mesh[] meshes, Camera camera)
+    void renderFrame(MTKView view,  Node[] nodes, Camera camera)
     {
         auto pool = NSAutoreleasePool.alloc().init();
         scope(exit) pool.drain();
@@ -78,21 +79,31 @@ class Renderer
         renderEncoder.setRenderPipelineState(renderPipelineState);
         renderEncoder.setDepthStencilState(depthStencilState);
 
-        if(meshes is null)
-        {
-            writeln("Failed cube check.");
-        }
-
         camera.Update();
 
-        foreach(Mesh mesh; meshes)
+        foreach(Node node; nodes)
         {
-            mesh.encodeRenderCommand(renderEncoder, camera.viewMatrix, perspectiveMatrix);
+            draw(node, camera, renderEncoder);
         }
 
         renderEncoder.endEncoding();
         commandBuffer.present(drawable);
         commandBuffer.commit();
+    }
+
+    void draw(Node node, Camera camera, MTLRenderCommandEncoder encoder)
+    {
+        TransformationData transformationData = {node.modelMatrix(), camera.viewMatrix, perspectiveMatrix};
+        auto contentsPtr = node.transformationBuffer.contents();
+        *(cast(TransformationData*) contentsPtr) = transformationData;
+
+        encoder.setVertexBuffer(node.mesh.vertexBuffer, 0, 0);
+        encoder.setFragmentTextures(node.mesh.textures.ptr, NSMakeRange(0,node.mesh.textures.length));
+        encoder.setVertexBuffer(node.transformationBuffer, 0, 1);
+
+        MTLPrimitiveType typeTriangle = MTLPrimitiveType.triangle;
+        NSUInteger indexBufferOffset = 0;
+        encoder.drawIndexedPrimitives(typeTriangle,node.mesh.indexCount, MTLIndexType.uint32, node.mesh.indexBuffer, indexBufferOffset);
     }
 }
 

@@ -15,6 +15,7 @@ import metalkit;
 import renderer;
 import texture;
 import types;
+import node;
 
 import core.atomic;
 import core.thread;
@@ -41,7 +42,7 @@ void main()
 
     Renderer renderer = new Renderer(device, aspectRatio);
 
-    Mesh[] meshes;
+    Node[] nodes;
 
     frame = CGRect(CGPoint(0,0), CGSize(600,600));
     MTKView view = MTKView.alloc().initWithFrame(frame, device);
@@ -55,26 +56,31 @@ void main()
 
     MeshLoader loader = new MeshLoader();
 
-    //loader.load("source/assets/square.obj", renderer);
-    meshes ~= loader.loadObj("source/assets/textured_cube.obj", renderer);
-
-    foreach(Mesh mesh; meshes)
-    {
-        mesh.makeBuffer(device);
-    }
-
+    Mesh cube = loader.loadObj("source/assets/textured_cube.obj", renderer);
+    nodes ~= new Node(device, cube);
+    nodes ~= new Node(device, cube);
+    nodes ~= new Node(device, cube);
+    nodes ~= new Node(device, cube);
+    nodes ~= new Node(device, cube);
     Camera camera = new Camera();
 
     void Start()
     {
-
-        camera.position.y = 1f;
+        camera.position.x = 5f;
+        camera.position.y = 5f;
         camera.position.z = 10f;
+
+        camera.rotation.x = -1f;
+
+        foreach(i,Node node; nodes)
+        {
+            nodes[i].position.x+=i*2;
+        }
     }
 
     void Update(float delta)
     {
-        meshes[0].rotation.y += 1.0f * delta;
+
     }
 
     auto renderThread = new Thread(
@@ -89,7 +95,7 @@ void main()
                 MonoTime frameStart = MonoTime.currTime;
 
                 Update(delta);
-                renderer.renderFrame(view, meshes, camera);
+                renderer.renderFrame(view, nodes, camera);
 
                 Duration elapsed = MonoTime.currTime - frameStart;
                 double targetMs = 1000.0 / fpsLimit;
