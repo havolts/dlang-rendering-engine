@@ -3,7 +3,7 @@
   "copyright": "Copyright © 2026, havolts",
   "dependencies": {
     "d-windowing": {
-      "repository": "git+https://github.com/havolts/macoswindowing-dlang.git",
+      "repository": "git+https://github.com/havolts/d-windowing.git",
       "version": "~main"
     },
     "d-apple": {
