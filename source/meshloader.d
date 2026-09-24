@@ -174,14 +174,9 @@ class MeshLoader
         if (textures.length == 0)
             stderr.writeln("Warning: no textures loaded for ", filepath);
 
-        uint indexCount = cast(uint) indices.length;
-
         Mesh mesh = new Mesh(
             vertices,
             indices,
-            indexCount,
-            &renderer.renderPipelineState,
-            &renderer.depthStencilState,
             textures
         );
         mesh.makeBuffer(renderer.device);

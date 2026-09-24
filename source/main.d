@@ -34,7 +34,7 @@ void main()
     app = new OSXApplication();
     MTLDevice device = MTLCreateSystemDefaultDevice();
 
-    window = app.CreateWindow(600, 600, "window 1");
+    window = app.CreateWindow(600, 600, "Main Window");
     window.terminateApp = true;
 
 

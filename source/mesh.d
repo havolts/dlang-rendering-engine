@@ -18,11 +18,11 @@ public class Mesh
     MTLBuffer vertexBuffer;
     MTLBuffer indexBuffer;
 
-    this(VertexData[] inVertices, uint[] inIndices, NSUInteger inIndexCount, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState)
+    this(VertexData[] inVertices, uint[] inIndices)
     {
         vertices = inVertices;
         indices = inIndices;
-        indexCount = inIndexCount;
+        indexCount = indices.length;
 
         if(vertices is null)
         {
@@ -34,43 +34,9 @@ public class Mesh
         }
     }
 
-    this(VertexData[] inVertices, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState)
+    this(VertexData[] inVertices, uint[] inIndices, Texture[] inTextures)
     {
-        vertices = inVertices;
-
-        if(vertices is null)
-        {
-            writeln("vertices failed.");
-        }
-        if(indices is null)
-        {
-            writeln("indices failed.");
-        }
-    }
-
-    this(VertexData[] inVertices, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState, Texture[] inTextures)
-    {
-        vertices = inVertices;
-        void*[] inMTLTextures = new void*[inTextures.length];
-        for(int i = 0; i < inTextures.length; i++)
-        {
-            inMTLTextures[i] = cast(void*) inTextures[i].texture;
-        }
-        textures = inMTLTextures;
-
-        if(vertices is null)
-        {
-            writeln("vertices failed.");
-        }
-        if(textures is null)
-        {
-            writeln("texture failed.");
-        }
-    }
-
-    this(VertexData[] inVertices, uint[] inIndices, NSUInteger inIndexCount, MTLRenderPipelineState* inMetalRenderPSO, MTLDepthStencilState* inDepthStencilState, Texture[] inTextures)
-    {
-        this(inVertices, inIndices, inIndexCount, inMetalRenderPSO, inDepthStencilState);
+        this(inVertices, inIndices);
 
         void*[] inMTLTextures = new void*[inTextures.length];
 
