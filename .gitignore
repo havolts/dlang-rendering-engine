@@ -24,3 +24,4 @@ triangle.air
 *.DS_Store
 codeExplanation.txt
 /source/assets/*
+/SDL3*

@@ -9,6 +9,10 @@
     "d-apple": {
       "repository": "git+https://github.com/havolts/d-apple.git",
       "version": "~main"
+    },
+    "sdl-d": {
+      "repository": "git+https://github.com/Inochi2D/sdl-d.git",
+      "version": "~main"
     }
   },
   "description": "Hardware renderer",
