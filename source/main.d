@@ -53,6 +53,13 @@ void main()
         return;
     }
 
+    if(!SDL_ClaimWindowForGPUDevice(device, window))
+    {
+        writeln("SDL_ClaimWindowForGPUDevice failed: ", SDL_GetError());
+        SDL_Quit();
+        return;
+    }
+
     SDL_Event event;
     bool running = true;
     while (running)
