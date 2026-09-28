@@ -1,21 +1,13 @@
 // renderengine/source/main.d
 module main;
 
-import camera;
-import meshloader;
-import cocoa;
-import coregraphics;
-import coreanimation;
-import macoswindowing.window;
-import osxwindowing;
 
 import mesh;
-import metal;
-import metalkit;
 import renderer;
 import texture;
 import types;
 import node;
+import camera;
 
 import core.atomic;
 import core.thread;
@@ -64,8 +56,10 @@ void main()
     bool running = true;
     while (running)
     {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EventType.SDL_EVENT_QUIT) {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_EventType.SDL_EVENT_QUIT)
+            {
                 running = false;
             }
         }

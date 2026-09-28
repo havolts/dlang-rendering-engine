@@ -1,47 +1,38 @@
 module node;
 
-import metal;
-import metalkit;
-import coregraphics;
-import cocoa;
-import macoswindowing;
 import std.math;
 import std.stdio;
 import types;
 import texture;
 import mesh;
+import sdl;
+import sdl.error;
+import sdl.gpu;
 
 public class Node
 {
-    /*
-        A Node should have position, rotation and scale and a Mesh object.
-        It should also own the transformation buffer as this is per node data. If you do it per mesh, then every node using 1 mesh will change.
-    */
-
     float3 position = float3(0f,0f,0f);
     float3 rotation = float3(0f,0f,0f);
     float3 scale = float3(1f,1f,1f);
 
     Mesh mesh;
-    MTLBuffer transformationBuffer;
 
-    this(MTLDevice device, Mesh inMesh)
+    this(SDL_GPUDevice* device, Mesh inMesh)
     {
-        transformationBuffer = device.makeBuffer(TransformationData.sizeof, MTLResourceOptions.storageModeShared);
         mesh = inMesh;
     }
 
     float4x4 modelMatrix()
     {
-        float4x4 rotationMatrix = float4x4([[1f,0,0,0], // x
+        float4x4 rotationMatrix = float4x4([[1f,0,0,0],
                                             [0,cos(rotation.x),sin(rotation.x),0],
                                             [0,-sin(rotation.x),cos(rotation.x),0],
                                             [0,0,0,1f]]) *
-                                            float4x4([[cos(rotation.y),0,sin(rotation.y),0], // y
+                                            float4x4([[cos(rotation.y),0,sin(rotation.y),0],
                                                       [0,1f,0,0],
                                                       [-sin(rotation.y),0,cos(rotation.y),0],
                                                       [0,0,0,1f]]) *
-                                                      float4x4([[cos(rotation.z),-sin(rotation.z),0,0], // z
+                                                      float4x4([[cos(rotation.z),-sin(rotation.z),0,0],
                                                                 [sin(rotation.z),cos(rotation.z),0,0],
                                                                 [0,0,1f,0],
                                                                 [0,0,0,1f]]);

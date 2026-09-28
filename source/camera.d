@@ -1,10 +1,5 @@
 module camera;
-import macoswindowing.window;
 
-import metal;
-import metalkit;
-import coregraphics;
-import cocoa;
 import mesh;
 import std.stdio;
 import std.math;

@@ -1,0 +1,7 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"imageformats": "7.0.2",
+		"sdl-d": {"version":"~main","repository":"git+https://github.com/Inochi2D/sdl-d.git"},
+	}
+}

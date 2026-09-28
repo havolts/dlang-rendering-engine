@@ -1,10 +1,5 @@
 module meshloader;
 
-import metal;
-import metalkit;
-import coregraphics;
-import cocoa;
-import macoswindowing;
 import std.algorithm : min;
 import std.array : split, join, replace;
 import std.conv : to;
@@ -17,6 +12,9 @@ import types;
 import texture;
 import mesh;
 import renderer;
+import sdl;
+import sdl.error;
+import sdl.gpu;
 
 /// Key used to deduplicate vertices: same position + texcoord + material texture => same vertex.
 private struct VertexKey
@@ -184,7 +182,7 @@ class MeshLoader
         return mesh;
     }
 
-    private void loadMtl(string mtlPath, MTLDevice device)
+    private void loadMtl(string mtlPath, SDL_GPUDevice* device)
     {
         string mtlKey = buildNormalizedPath(mtlPath);
         if (mtlKey in loadedMtlFiles)

@@ -145,7 +145,7 @@ class Renderer
         SDL_BindGPUFragmentSamplers(renderPass, 0, &texBinding, 1);
 
         // 6. Draw
-        SDL_DrawGPUIndexedPrimitives(renderPass, cast(Uint32)node.mesh.indexCount, 1, 0, 0, 0);
+        SDL_DrawGPUIndexedPrimitives(renderPass, cast(Uint32)node.mesh.indices.length, 1, 0, 0, 0);
     }
 
     SDL_GPUGraphicsPipeline* buildPipeline()

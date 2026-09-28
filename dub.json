@@ -2,18 +2,11 @@
   "authors": ["havolts"],
   "copyright": "Copyright © 2026, havolts",
   "dependencies": {
-    "d-windowing": {
-      "repository": "git+https://github.com/havolts/d-windowing.git",
-      "version": "~main"
-    },
-    "d-apple": {
-      "repository": "git+https://github.com/havolts/d-apple.git",
-      "version": "~main"
-    },
     "sdl-d": {
       "repository": "git+https://github.com/Inochi2D/sdl-d.git",
       "version": "~main"
-    }
+    },
+    "imageformats": "~>7.0"
   },
   "description": "Hardware renderer",
   "license": "proprietary",
