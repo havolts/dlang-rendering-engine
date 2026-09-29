@@ -8,6 +8,7 @@ import texture;
 import types;
 import node;
 import camera;
+import meshloader;
 
 import core.atomic;
 import core.thread;
@@ -29,6 +30,7 @@ void main()
 
     const(char) * title = "My SDL3 Window";
     SDL_Window* window = SDL_CreateWindow(title, 800, 600, SDL_WindowFlags.SDL_WINDOW_MAXIMIZED);
+    SDL_ShowWindow(window);
     if (window is null)
     {
         writeln("SDL_CreateWindow failed: ", SDL_GetError());
@@ -52,6 +54,30 @@ void main()
         return;
     }
 
+    Renderer renderer = new Renderer(device, window, "shader.vert.msl", "shader.frag.msl");
+    Node[] nodes;
+
+    MeshLoader loader = new MeshLoader();
+
+    Mesh cube = loader.loadObj("source/assets/textured_cube.obj", renderer);
+    nodes ~= new Node(device, cube);
+    Camera camera = new Camera();
+
+    void Start()
+    {
+        camera.position.x = 5f;
+        camera.position.y = 5f;
+        camera.position.z = 10f;
+
+        camera.rotation.x = -1f;
+    }
+
+    void Update(float delta)
+    {
+
+    }
+
+    Start();
     SDL_Event event;
     bool running = true;
     while (running)
@@ -63,6 +89,7 @@ void main()
                 running = false;
             }
         }
+        renderer.renderFrame(nodes, camera);
         SDL_Delay(10);
     }
 
