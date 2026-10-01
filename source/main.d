@@ -29,7 +29,7 @@ void main()
     }
 
     const(char) * title = "My SDL3 Window";
-    SDL_Window* window = SDL_CreateWindow(title, 600, 600, SDL_WindowFlags.SDL_WINDOW_MAXIMIZED);
+    SDL_Window* window = SDL_CreateWindow(title, 600, 600, SDL_WindowFlags.SDL_WINDOW_MAXIMIZED | SDL_WindowFlags.SDL_WINDOW_HIGH_PIXEL_DENSITY);
     SDL_ShowWindow(window);
     if (window is null)
     {
